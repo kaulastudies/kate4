@@ -19,86 +19,72 @@
             --soft-beige: #F5F2EF; 
         }
         
-        body { font-family: 'Gentium Plus', serif; background-color: var(--dark-brown); color: var(--warm-white); transition: all 0.3s ease; }
+        body { font-family: 'Gentium Plus', serif; background-color: var(--dark-brown); color: var(--warm-white); overflow: hidden; }
         .heading-font { font-family: 'EB Garamond', serif; }
         .iast-font { font-family: 'Gentium Plus', serif; font-weight: 400 !important; }
         
         .clickable { cursor: pointer !important; }
         .sidebar-btn { @apply w-full text-left px-5 py-3 rounded-xl text-sm transition-all clickable hover:bg-white/5 text-[#FDFBF9]/80 font-sans tracking-wider; }
         
-        /* PILL-SHAPED TABS - Visually toggling based on selection */
+        /* Pill Buttons for Tabs */
         .tab-btn { @apply px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all border border-[#3E170F] clickable tracking-widest; }
-        .tab-active { background-color: var(--dark-brown); color: white; border-color: var(--dark-brown); }
-        .tab-inactive { background-color: transparent; color: var(--dark-brown); border-color: rgba(62, 23, 15, 0.3); }
+        .tab-active { background-color: var(--dark-brown); color: white !important; border-color: var(--dark-brown); }
+        .tab-inactive { background-color: transparent; color: var(--dark-brown) !important; border-color: rgba(62, 23, 15, 0.2); }
 
-        /* Content Surfaces */
-        .surface-box { background-color: var(--warm-white); color: var(--dark-brown); }
+        /* Transition for the Merged Sidebar */
+        #previewPane { 
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+        }
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #B5815A; border-radius: 10px; }
-
-        /* Floating Pane Animation */
-        #previewPane { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; transform: translateX(110%); }
-        #previewPane.open { transform: translateX(0); opacity: 1; }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex flex-col bg-[#3E170F]">
+<body class="h-screen flex overflow-hidden bg-[#3E170F]">
 
-    <div id="authPage" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#3E170F]">
-        <div class="surface-box p-14 rounded-[40px] shadow-2xl w-[480px] border border-[#B5815A]/20 text-center">
-            <h1 class="heading-font text-4xl text-[#3E170F] mb-2 font-semibold">Manuscript Database</h1>
-            <p class="text-[10px] text-[#B5815A] uppercase tracking-[0.3em] font-bold mb-10 font-sans">Centre for Kaula Studies</p>
-            <div id="loginForm" class="space-y-4">
-                <input type="email" id="inEmail" placeholder="Email Address" class="w-full p-4 border border-[#E1D2C1] rounded-2xl outline-none text-[#3E170F] font-sans">
-                <input type="password" id="inPass" placeholder="Password" class="w-full p-4 border border-[#E1D2C1] rounded-2xl outline-none text-[#3E170F] font-sans">
-                <button onclick="handleSignIn()" class="w-full py-4 rounded-2xl font-bold text-white bg-[#B5815A] hover:bg-[#714C33] uppercase tracking-wider text-sm font-sans">Secure Login</button>
-            </div>
+    <aside class="w-72 bg-[#3E170F] border-r border-[#FDFBF9]/10 shrink-0 font-sans flex flex-col z-20">
+        <div class="p-8 border-b border-[#FDFBF9]/10 h-32 flex flex-col justify-center">
+            <h2 class="heading-font text-[#FDFBF9] text-3xl leading-tight">Manuscript<br>Database</h2>
+            <p class="font-sans text-[10px] text-[#B5815A] uppercase tracking-[0.2em] font-bold mt-1">Centre for Kaula Studies</p>
         </div>
-    </div>
+        <div class="p-6">
+            <nav class="space-y-2">
+                <p class="px-5 text-[9px] uppercase tracking-[0.2em] font-bold text-[#B5815A] mb-4">Library</p>
+                <button onclick="switchView('catalog')" class="sidebar-btn">📖 Catalog</button>
+                <button id="navUpload" onclick="switchView('upload')" class="hidden sidebar-btn">📤 Upload E-Texts</button>
+            </nav>
+        </div>
+        <div class="p-8 mt-auto border-t border-[#FDFBF9]/10">
+            <p class="text-sm text-white font-bold mb-1" id="uiName">--</p>
+            <button onclick="handleLogout()" class="text-[10px] font-black text-[#B5815A] hover:text-white uppercase clickable">Logout</button>
+        </div>
+    </aside>
 
-    <div id="dashboard" class="hidden flex h-full">
-        <aside class="w-72 bg-[#3E170F] border-r border-[#FDFBF9]/10 shrink-0 font-sans flex flex-col">
-            <div class="p-8 border-b border-[#FDFBF9]/10 h-32 flex flex-col justify-center">
-                <h2 class="heading-font text-[#FDFBF9] text-3xl leading-tight">Manuscript<br>Database</h2>
-                <p class="font-sans text-[10px] text-[#B5815A] uppercase tracking-[0.2em] font-bold mt-1">Centre for Kaula Studies</p>
+    <main class="flex-1 flex flex-col overflow-hidden relative bg-[#3E170F] z-10">
+        <section id="v-catalog" class="flex-1 flex flex-col p-12 overflow-hidden">
+            <div class="max-w-3xl mx-auto w-full">
+                <h2 class="heading-font text-5xl text-[#FDFBF9] mb-8 font-semibold">Manuscript Database</h2>
+                <input type="text" id="mSearch" oninput="fetchData()" placeholder="Central Search..." 
+                    class="w-full p-6 rounded-full shadow-2xl outline-none bg-[#FDFBF9] text-[#3E170F] font-sans mb-10 border-none focus:ring-4 focus:ring-[#B5815A]/30">
+                <div id="catalogList" class="overflow-y-auto space-y-4 pb-20 pr-2"></div>
             </div>
-            <div class="p-6">
-                <nav class="space-y-2">
-                    <p class="px-5 text-[9px] uppercase tracking-[0.2em] font-bold text-[#B5815A] mb-4">Library</p>
-                    <button onclick="switchView('catalog')" class="sidebar-btn">📖 Catalog</button>
-                    <button id="navUpload" onclick="switchView('upload')" class="hidden sidebar-btn">📤 Upload E-Texts</button>
-                </nav>
+        </section>
+
+        <section id="v-upload" class="hidden flex-1 p-16 overflow-y-auto">
+            <div class="max-w-3xl mx-auto bg-[#FDFBF9] p-14 rounded-[40px] shadow-2xl">
+                <h2 class="heading-font text-4xl mb-8 text-[#3E170F] font-semibold">Upload E-Text</h2>
+                <input type="text" id="upTitle" placeholder="Title (IAST)" class="w-full p-5 mb-4 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none">
+                <textarea id="upContent" placeholder="Paste text here..." class="w-full h-64 p-5 mb-6 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none"></textarea>
+                <button onclick="submitEtext()" class="w-full bg-[#B5815A] py-5 rounded-2xl text-white font-bold uppercase font-sans">Upload</button>
             </div>
-            <div class="p-8 mt-auto border-t border-[#FDFBF9]/10">
-                <p class="text-sm text-white font-bold mb-1" id="uiName">--</p>
-                <button onclick="handleLogout()" class="text-[10px] font-black text-[#B5815A] hover:text-white uppercase clickable">Logout</button>
+        </section>
+    </main>
+
+    <aside id="previewPane" class="w-0 bg-[#F5F2EF] flex flex-col overflow-hidden z-30">
+        <div id="previewContent" class="p-12 flex flex-col h-full opacity-0 transition-opacity duration-300">
             </div>
-        </aside>
-
-        <main class="flex-1 flex flex-col overflow-hidden relative">
-            <section id="v-catalog" class="flex-1 flex flex-col p-12 overflow-hidden">
-                <div class="max-w-4xl mx-auto w-full">
-                    <h2 class="heading-font text-5xl text-[#FDFBF9] mb-8 font-semibold">Manuscript Database</h2>
-                    <input type="text" id="mSearch" oninput="fetchData()" placeholder="Central Search by Volume, Chapter, or Title..." 
-                        class="w-full p-6 rounded-full shadow-2xl outline-none bg-[#FDFBF9] text-[#3E170F] font-sans mb-10 focus:ring-4 focus:ring-[#B5815A]/30 transition-all">
-                    <div id="catalogList" class="overflow-y-auto space-y-4 pb-20 pr-2"></div>
-                </div>
-            </section>
-
-            <section id="v-upload" class="hidden flex-1 p-16 overflow-y-auto">
-                <div class="max-w-3xl mx-auto surface-box p-14 rounded-[40px] shadow-2xl">
-                    <h2 class="heading-font text-4xl mb-8 text-[#3E170F] font-semibold">Upload E-Text</h2>
-                    <input type="text" id="upTitle" placeholder="Title (IAST)" class="w-full p-5 mb-4 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none focus:border-[#B5815A]">
-                    <textarea id="upContent" placeholder="Paste text here..." class="w-full h-64 p-5 mb-6 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none focus:border-[#B5815A]"></textarea>
-                    <button onclick="submitEtext()" class="w-full bg-[#B5815A] py-5 rounded-2xl text-white font-bold uppercase font-sans shadow-lg hover:shadow-xl transition-all">Upload to Database</button>
-                </div>
-            </section>
-
-            <aside id="previewPane" class="absolute top-6 bottom-6 right-6 w-[750px] bg-[#F5F2EF] rounded-[40px] flex flex-col overflow-hidden shadow-2xl z-50 opacity-0 border border-[#3E170F]/5">
-                <div id="previewContent" class="p-12 flex flex-col h-full"></div>
-            </aside>
-        </main>
-    </div>
+    </aside>
 
     <script>
         const SB_URL = "https://gcgxcnbimqpfrowesfms.supabase.co";
@@ -110,8 +96,6 @@
         async function init() {
             const { data: { session } } = await kClient.auth.getSession();
             if (session) {
-                document.getElementById('authPage').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
                 const { data: profile } = await kClient.from('profiles').select('*').eq('id', session.user.id).single();
                 userRole = profile?.role || 'public';
                 document.getElementById('uiName').innerText = profile?.full_name || "Scholar";
@@ -128,9 +112,9 @@
             if (data) {
                 document.getElementById('catalogList').innerHTML = data.map(m => `
                     <div onclick="openPreview(${JSON.stringify(m).replace(/"/g, '&quot;')}, this)" 
-                         class="surface-box p-8 rounded-3xl flex justify-between items-center clickable border-2 border-transparent hover:border-[#B5815A]/30 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
+                         class="bg-[#FDFBF9] p-8 rounded-3xl flex justify-between items-center clickable border-2 border-transparent hover:border-[#B5815A]/30 text-[#3E170F] transition-all">
                         <div>
-                            <h4 class="iast-font text-2xl text-[#3E170F] mb-1">${m.title_iast}</h4>
+                            <h4 class="iast-font text-2xl mb-1">${m.title_iast}</h4>
                             <p class="font-sans text-[10px] text-[#714C33] font-bold uppercase tracking-[0.2em]">${m.subject || 'E-Text'}</p>
                         </div>
                     </div>
@@ -140,23 +124,35 @@
 
         function openPreview(m, el) {
             originalContent = m.content || '';
+            
+            // Highlight the selected card
             document.querySelectorAll('#catalogList > div').forEach(d => d.style.borderColor = 'transparent');
             el.style.borderColor = '#B5815A';
             
             const pane = document.getElementById('previewPane');
-            pane.classList.add('open');
-            
             const content = document.getElementById('previewContent');
+            
+            // Merged Docking logic: expand width
+            pane.style.width = "50vw"; // Takes up half the screen
+            content.style.opacity = "1";
+
             content.innerHTML = `
                 <div class="flex justify-between items-center mb-8 pb-4 border-b border-[#3E170F]/10 font-sans shrink-0">
-                    <button onclick="closePane()" class="text-[10px] font-black uppercase text-[#B5815A] tracking-widest hover:text-[#3E170F] transition-colors">✕ Close View</button>
+                    <button onclick="closePane()" class="text-[10px] font-black uppercase text-[#B5815A] tracking-widest hover:text-[#3E170F]">✕ Close View</button>
+                    
                     <div class="flex space-x-2 bg-[#3E170F]/5 p-1 rounded-full">
                         <button id="btnIAST" onclick="changeView('iast')" class="tab-btn tab-active">IAST</button>
                         <button id="btnDeva" onclick="changeView('devanagari')" class="tab-btn tab-inactive">Devanagari</button>
                     </div>
                 </div>
+                
                 <h2 class="iast-font text-4xl text-[#3E170F] mb-8 leading-tight shrink-0">${m.title_iast}</h2>
-                <textarea id="liveEditor" readonly class="flex-1 w-full p-8 rounded-[30px] text-xl leading-[2.2] bg-white border border-[#E1D2C1]/50 outline-none text-[#3E170F] iast-font resize-none shadow-inner">${originalContent}</textarea>
+                
+                <textarea id="liveEditor" readonly class="flex-1 w-full p-10 rounded-[30px] text-xl leading-[2.2] bg-white border border-[#E1D2C1] outline-none text-[#3E170F] iast-font resize-none shadow-inner">${originalContent}</textarea>
+                
+                <button onclick="downloadAsTXT('${m.title_iast}')" class="mt-6 w-full py-4 border-2 border-[#B5815A] text-[#B5815A] rounded-full font-bold uppercase text-[10px] tracking-widest hover:bg-[#B5815A] hover:text-white transition-all">
+                    Download .txt
+                </button>
             `;
         }
 
@@ -185,20 +181,27 @@
             }
         }
 
-        async function submitEtext() {
-            const title = document.getElementById('upTitle').value;
-            const content = document.getElementById('upContent').value;
-            await kClient.from('manuscripts').insert([{ title_iast: title, content: content, search_blob: title }]);
-            location.reload();
+        function downloadAsTXT(title) {
+            const text = document.getElementById('liveEditor').value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const anchor = document.createElement('a');
+            anchor.download = title + ".txt";
+            anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+            anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
+            anchor.click();
         }
 
-        async function handleSignIn() {
-            const { error } = await kClient.auth.signInWithPassword({ email: document.getElementById('inEmail').value, password: document.getElementById('inPass').value });
-            if (!error) location.reload(); else alert(error.message);
+        function closePane() { 
+            document.getElementById('previewPane').style.width = "0px"; 
+            document.getElementById('previewContent').style.opacity = "0";
         }
 
-        function closePane() { document.getElementById('previewPane').classList.remove('open'); }
-        function switchView(v) { document.getElementById('v-catalog').classList.toggle('hidden', v !== 'catalog'); document.getElementById('v-upload').classList.toggle('hidden', v !== 'upload'); closePane(); }
+        function switchView(v) { 
+            document.getElementById('v-catalog').classList.toggle('hidden', v !== 'catalog'); 
+            document.getElementById('v-upload').classList.toggle('hidden', v !== 'upload'); 
+            closePane(); 
+        }
+
         async function handleLogout() { await kClient.auth.signOut(); location.reload(); }
         window.onload = init;
     </script>
