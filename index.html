@@ -16,21 +16,22 @@
             --accent: #B5815A; 
             --dark-brown: #3E170F;
             --warm-white: #FDFBF9; 
+            --soft-beige: #F5F2EF;
         }
         
-        body { 
-            font-family: 'Gentium Plus', serif; 
-            background-color: var(--dark-brown); 
-            color: var(--warm-white); 
-        }
-        
+        body { font-family: 'Gentium Plus', serif; background-color: var(--dark-brown); color: var(--warm-white); transition: all 0.3s ease; }
         .heading-font { font-family: 'EB Garamond', serif; }
         .iast-font { font-family: 'Gentium Plus', serif; font-weight: 400 !important; }
         
         .clickable { cursor: pointer !important; }
         .sidebar-btn { @apply w-full text-left px-5 py-3 rounded-xl text-sm transition-all clickable hover:bg-white/5 text-[#FDFBF9]/80 font-sans tracking-wider; }
         
-        /* Surfaces */
+        /* Tab Styles */
+        .tab-btn { @apply px-4 py-2 rounded-lg text-[9px] font-bold uppercase transition-all border border-[#3E170F] clickable; }
+        .tab-active { background-color: var(--dark-brown); color: white; }
+        .tab-inactive { background-color: transparent; color: var(--dark-brown); }
+
+        /* Card Surfaces */
         .surface-box { background-color: var(--warm-white); color: var(--dark-brown); }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -54,9 +55,9 @@
 
     <div id="dashboard" class="hidden flex h-full">
         <aside class="w-72 bg-[#3E170F] border-r border-[#FDFBF9]/10 shrink-0 font-sans">
-            <div class="p-8 border-b border-[#FDFBF9]/10">
-                <h2 class="heading-font text-[#FDFBF9] text-4xl leading-tight mb-2">Manuscript<br>Database</h2>
-                <p class="font-sans text-[10px] text-[#B5815A] uppercase tracking-[0.2em] font-bold">Centre for Kaula Studies</p>
+            <div class="p-8 border-b border-[#FDFBF9]/10 h-32 flex flex-col justify-center">
+                <h2 class="heading-font text-[#FDFBF9] text-3xl leading-tight">Manuscript<br>Database</h2>
+                <p class="font-sans text-[10px] text-[#B5815A] uppercase tracking-[0.2em] font-bold mt-1">Centre for Kaula Studies</p>
             </div>
             <div class="p-6">
                 <nav class="space-y-2">
@@ -75,7 +76,7 @@
             <section id="v-catalog" class="flex-1 flex flex-col p-12 overflow-hidden">
                 <div class="max-w-4xl mx-auto w-full">
                     <h2 class="heading-font text-5xl text-[#FDFBF9] mb-8 font-semibold">Manuscript Database</h2>
-                    <input type="text" id="mSearch" oninput="fetchData()" placeholder="Central Search by Volume, Chapter, or Title..." 
+                    <input type="text" id="mSearch" oninput="fetchData()" placeholder="Central Search..." 
                         class="w-full p-6 rounded-full shadow-2xl outline-none bg-[#FDFBF9] text-[#3E170F] font-sans mb-10">
                     <div id="catalogList" class="overflow-y-auto space-y-4 pb-20"></div>
                 </div>
@@ -83,7 +84,7 @@
 
             <section id="v-upload" class="hidden flex-1 p-16 overflow-y-auto">
                 <div class="max-w-3xl mx-auto surface-box p-14 rounded-[40px] shadow-2xl">
-                    <h2 class="heading-font text-4xl mb-8 text-[#3E170F] font-semibold">Upload E-Text (.txt)</h2>
+                    <h2 class="heading-font text-4xl mb-8 text-[#3E170F] font-semibold">Upload E-Text</h2>
                     <input type="text" id="upTitle" placeholder="Title (IAST)" class="w-full p-5 mb-4 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans">
                     <input type="text" id="upSubject" placeholder="Tradition / Subject" class="w-full p-5 mb-4 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans">
                     <textarea id="upContent" placeholder="Paste text here..." class="w-full h-64 p-5 mb-6 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans"></textarea>
@@ -121,10 +122,7 @@
             const search = document.getElementById('mSearch').value;
             let query = kClient.from('manuscripts').select('*');
             if (search) query = query.ilike('search_blob', `%${search}%`);
-            
-            const { data, error } = await query;
-            if (error) console.error("Error fetching manuscripts:", error);
-            
+            const { data } = await query;
             if (data) {
                 document.getElementById('catalogList').innerHTML = data.map(m => `
                     <div onclick="openPreview(${JSON.stringify(m).replace(/"/g, '&quot;')}, this)" 
@@ -149,22 +147,39 @@
                 <div class="flex justify-between items-center mb-8 pb-4 border-b border-[#3E170F]/20 font-sans">
                     <button onclick="closePane()" class="text-[10px] font-black uppercase text-[#B5815A] tracking-widest">✕ Close View</button>
                     <div class="flex space-x-2">
-                        <button onclick="changeView('iast')" class="px-4 py-2 bg-[#3E170F] text-white rounded-lg text-[9px] font-bold uppercase">IAST</button>
-                        <button onclick="changeView('devanagari')" class="px-4 py-2 border border-[#3E170F] text-[#3E170F] rounded-lg text-[9px] font-bold uppercase">Devanagari</button>
+                        <button id="btnIAST" onclick="changeView('iast')" class="tab-btn tab-active">IAST</button>
+                        <button id="btnDeva" onclick="changeView('devanagari')" class="tab-btn tab-inactive">Devanagari</button>
                     </div>
                 </div>
                 <h2 class="iast-font text-4xl text-[#3E170F] mb-8 leading-tight">${m.title_iast}</h2>
-                <textarea id="liveEditor" class="flex-1 w-full p-8 rounded-[30px] text-xl leading-[2.2] bg-white border border-[#E1D2C1] outline-none text-[#3E170F] iast-font">${originalContent}</textarea>
+                <textarea id="liveEditor" readonly class="flex-1 w-full p-8 rounded-[30px] text-xl leading-[2.2] bg-white border border-[#E1D2C1] outline-none text-[#3E170F] iast-font">${originalContent}</textarea>
             `;
         }
 
         function changeView(fmt) {
             const editor = document.getElementById('liveEditor');
-            const marker = "Text:";
-            const idx = originalContent.indexOf(marker);
-            editor.value = (fmt === 'devanagari' && idx !== -1) 
-                ? originalContent.substring(0, idx+5) + Sanscript.t(originalContent.substring(idx+5), 'iast', 'devanagari') 
-                : originalContent;
+            const btnIAST = document.getElementById('btnIAST');
+            const btnDeva = document.getElementById('btnDeva');
+            
+            // Visual Toggle logic
+            if (fmt === 'iast') {
+                btnIAST.className = "tab-btn tab-active";
+                btnDeva.className = "tab-btn tab-inactive";
+                editor.value = originalContent;
+            } else {
+                btnIAST.className = "tab-btn tab-inactive";
+                btnDeva.className = "tab-btn tab-active";
+                
+                const marker = "Text:";
+                const idx = originalContent.indexOf(marker);
+                if (idx !== -1) {
+                    const header = originalContent.substring(0, idx + 5);
+                    const body = originalContent.substring(idx + 5);
+                    editor.value = header + Sanscript.t(body, 'iast', 'devanagari');
+                } else {
+                    editor.value = Sanscript.t(originalContent, 'iast', 'devanagari');
+                }
+            }
         }
 
         async function submitEtext() {
