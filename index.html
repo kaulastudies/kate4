@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manuscript Database | Centre for Kaula Studies</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@indic-transliteration/sanscript@1.2.8/sanscript.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --accent: #B5815A; 
+            --dark-brown: #3E170F;
+            --warm-white: #FDFBF9; 
+        }
+        
+        body { 
+            font-family: 'Gentium Plus', serif; 
+            background-color: var(--dark-brown); 
+            color: var(--warm-white); 
+        }
+        
+        .heading-font { font-family: 'Minerva Modern', 'EB Garamond', serif; }
+        .iast-font { font-family: 'Gentium Plus', serif; font-weight: 400 !important; }
+        
+        .clickable { cursor: pointer !important; }
+        .sidebar-btn { @apply w-full text-left px-5 py-3 rounded-xl text-sm transition-all clickable hover:bg-white/5 text-[#FDFBF9]/80 font-sans tracking-wider; }
+        
+        /* The "Kate-Approved" Surface Colors */
+        .surface-box { background-color: var(--warm-white); color: var(--dark-brown); }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #B5815A; border-radius: 10px; }
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex flex-col bg-[#3E170F]">
+
+    <div id="authPage" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#3E170F]">
+        <div class="surface-box p-14 rounded-[40px] shadow-2xl w-[480px] border border-[#B5815A]/20 text-center">
+            <h1 class="heading-font text-4xl text-[#3E170F] mb-10 font-semibold">Manuscript Database</h1>
+            <div id="loginForm" class="space-y-4">
+                <input type="email" id="inEmail" placeholder="Email Address" class="w-full p-4 border border-[#E1D2C1] rounded-2xl outline-none text-[#3E170F] font-sans">
+                <input type="password" id="inPass" placeholder="Password" class="w-full p-4 border border-[#E1D2C1] rounded-2xl outline-none text-[#3E170F] font-sans">
+                <button onclick="handleSignIn()" class="w-full py-4 rounded-2xl font-bold text-white bg-[#B5815A] uppercase tracking-wider text-sm font-sans">Secure Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden flex h-full">
+        <aside class="w-72 bg-[#3E170F] border-r border-[#FDFBF9]/10 shrink-0 font-sans">
+            <div class="p-8 border-b border-[#FDFBF9]/10 h-32 flex flex-col items-center justify-center">
+                <p class="text-[#B5815A] italic text-xs uppercase tracking-widest opacity-60">[Logo Placeholder]</p>
+            </div>
+            <div class="p-6">
+                <nav class="space-y-2">
+                    <p class="px-5 text-[9px] uppercase tracking-[0.2em] font-bold text-[#B5815A] mb-4">Library</p>
+                    <button onclick="switchView('catalog')" class="sidebar-btn">📖 Catalog</button>
+                    <button id="navUpload" onclick="switchView('upload')" class="hidden sidebar-btn">📤 Upload E-Texts</button>
+                    <button id="navAdmin" onclick="switchView('admin')" class="hidden sidebar-btn text-[#B5815A] font-bold">🛡️ Governance</button>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <section id="v-catalog" class="flex-1 flex flex-col p-12 overflow-hidden">
+                <div class="max-w-4xl mx-auto w-full">
+                    <h2 class="heading-font text-5xl text-[#FDFBF9] mb-8 font-semibold">Manuscript Database</h2>
+                    <input type="text" id="mSearch" oninput="fetchData()" placeholder="Central Search..." 
+                        class="w-full p-6 rounded-full shadow-2xl outline-none bg-[#FDFBF9] text-[#3E170F] font-sans mb-10">
+                    <div id="catalogList" class="overflow-y-auto space-y-4 pb-10"></div>
+                </div>
+            </section>
+
+            <section id="v-upload" class="hidden flex-1 p-16 overflow-y-auto">
+                <div class="max-w-3xl mx-auto surface-box p-14 rounded-[40px] shadow-2xl">
+                    <h2 class="heading-font text-4xl mb-8 text-[#3E170F] font-semibold">Upload E-Text (.txt)</h2>
+                    <input type="text" id="upTitle" placeholder="Title (IAST)" class="w-full p-5 mb-4 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans">
+                    <textarea id="upContent" placeholder="Paste text here..." class="w-full h-64 p-5 mb-6 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans"></textarea>
+                    <button onclick="submitEtext()" class="w-full bg-[#B5815A] py-5 rounded-2xl text-white font-bold uppercase font-sans">Upload</button>
+                </div>
+            </section>
+        </main>
+
+        <aside id="previewPane" class="w-0 surface-box border-l border-[#3E170F] flex flex-col overflow-hidden shadow-2xl z-20">
+            <div id="previewContent" class="p-12 invisible opacity-0 transition-opacity flex flex-col h-full"></div>
+        </aside>
+    </div>
+
+    <script>
+        const SB_URL = "https://gcgxcnbimqpfrowesfms.supabase.co";
+        const SB_KEY = "sb_publishable_XObSGljjo-VILprIHw_Bxw_FKM7uUOU";
+        const kClient = supabase.createClient(SB_URL, SB_KEY);
+        let userRole = 'public';
+        let originalContent = '';
+
+        async function init() {
+            const { data: { session } } = await kClient.auth.getSession();
+            if (session) {
+                document.getElementById('authPage').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                const { data: profile } = await kClient.from('profiles').select('*').eq('id', session.user.id).single();
+                userRole = profile?.role || 'public';
+                document.getElementById('uiName').innerText = profile?.full_name || "Scholar";
+                if (['admin', 'scholar'].includes(userRole)) document.getElementById('navUpload').classList.remove('hidden');
+                fetchData();
+            }
+        }
+
+        async function fetchData() {
+            const search = document.getElementById('mSearch').value;
+            let query = kClient.from('manuscripts').select('*');
+            if (search) query = query.ilike('search_blob', `%${search}%`);
+            const { data } = await query;
+            document.getElementById('catalogList').innerHTML = data.map(m => `
+                <div onclick="openPreview(${JSON.stringify(m).replace(/"/g, '&quot;')}, this)" 
+                     class="surface-box p-8 rounded-3xl flex justify-between items-center clickable border border-transparent hover:border-[#B5815A]/30">
+                    <div>
+                        <h4 class="iast-font text-2xl text-[#3E170F] mb-1">${m.title_iast}</h4>
+                        <p class="font-sans text-[10px] text-[#714C33] font-bold uppercase tracking-[0.2em]">${m.subject || 'E-Text'}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openPreview(m, el) {
+            originalContent = m.content;
+            document.getElementById('previewPane').style.width = "750px";
+            document.getElementById('previewContent').innerHTML = `
+                <div class="flex justify-between items-center mb-8 pb-4 border-b border-[#3E170F]/20 font-sans">
+                    <button onclick="document.getElementById('previewPane').style.width='0px'" class="text-[10px] font-black uppercase text-[#B5815A] tracking-widest">✕ Close</button>
+                    <div class="flex space-x-2">
+                        <button onclick="changeView('iast')" class="px-4 py-2 bg-[#3E170F] text-white rounded-lg text-[9px] font-bold uppercase">IAST</button>
+                        <button onclick="changeView('devanagari')" class="px-4 py-2 border border-[#3E170F] text-[#3E170F] rounded-lg text-[9px] font-bold uppercase">Devanagari</button>
+                    </div>
+                </div>
+                <h2 class="iast-font text-3xl text-[#3E170F] mb-8 leading-tight">${m.title_iast}</h2>
+                <textarea id="liveEditor" class="flex-1 w-full p-8 rounded-[30px] text-xl leading-[2.2] bg-white border border-[#E1D2C1] outline-none text-[#3E170F] iast-font">${originalContent}</textarea>
+            `;
+            document.getElementById('previewContent').classList.remove('invisible', 'opacity-0');
+        }
+
+        function changeView(fmt) {
+            const editor = document.getElementById('liveEditor');
+            const marker = "Text:";
+            const idx = originalContent.indexOf(marker);
+            editor.value = (fmt === 'devanagari' && idx !== -1) 
+                ? originalContent.substring(0, idx+5) + Sanscript.t(originalContent.substring(idx+5), 'iast', 'devanagari') 
+                : originalContent;
+        }
+
+        async function handleSignIn() {
+            const { error } = await kClient.auth.signInWithPassword({ email: document.getElementById('inEmail').value, password: document.getElementById('inPass').value });
+            if (!error) location.reload();
+        }
+
+        function switchView(v) { document.getElementById('v-catalog').classList.toggle('hidden', v !== 'catalog'); document.getElementById('v-upload').classList.toggle('hidden', v !== 'upload'); }
+        async function handleLogout() { await kClient.auth.signOut(); location.reload(); }
+        window.onload = init;
+    </script>
+</body>
+</html>
