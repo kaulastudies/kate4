@@ -26,12 +26,12 @@
         .clickable { cursor: pointer !important; }
         .sidebar-btn { @apply w-full text-left px-5 py-3 rounded-xl text-sm transition-all clickable hover:bg-white/5 text-[#FDFBF9]/80 font-sans tracking-wider; }
         
-        /* RESTORED & IMPROVED: Pill-Shaped Tabs */
+        /* PILL-SHAPED TABS - Visually toggling based on selection */
         .tab-btn { @apply px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all border border-[#3E170F] clickable tracking-widest; }
         .tab-active { background-color: var(--dark-brown); color: white; border-color: var(--dark-brown); }
-        .tab-inactive { background-color: transparent; color: var(--dark-brown); border-color: rgba(62, 23, 15, 0.2); }
+        .tab-inactive { background-color: transparent; color: var(--dark-brown); border-color: rgba(62, 23, 15, 0.3); }
 
-        /* Surfaces */
+        /* Content Surfaces */
         .surface-box { background-color: var(--warm-white); color: var(--dark-brown); }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -80,7 +80,7 @@
                 <div class="max-w-4xl mx-auto w-full">
                     <h2 class="heading-font text-5xl text-[#FDFBF9] mb-8 font-semibold">Manuscript Database</h2>
                     <input type="text" id="mSearch" oninput="fetchData()" placeholder="Central Search by Volume, Chapter, or Title..." 
-                        class="w-full p-6 rounded-full shadow-2xl outline-none bg-[#FDFBF9] text-[#3E170F] font-sans mb-10 border-none focus:ring-4 focus:ring-[#B5815A]/30 transition-all">
+                        class="w-full p-6 rounded-full shadow-2xl outline-none bg-[#FDFBF9] text-[#3E170F] font-sans mb-10 focus:ring-4 focus:ring-[#B5815A]/30 transition-all">
                     <div id="catalogList" class="overflow-y-auto space-y-4 pb-20 pr-2"></div>
                 </div>
             </section>
@@ -89,7 +89,6 @@
                 <div class="max-w-3xl mx-auto surface-box p-14 rounded-[40px] shadow-2xl">
                     <h2 class="heading-font text-4xl mb-8 text-[#3E170F] font-semibold">Upload E-Text</h2>
                     <input type="text" id="upTitle" placeholder="Title (IAST)" class="w-full p-5 mb-4 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none focus:border-[#B5815A]">
-                    <input type="text" id="upSubject" placeholder="Tradition / Subject" class="w-full p-5 mb-4 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none focus:border-[#B5815A]">
                     <textarea id="upContent" placeholder="Paste text here..." class="w-full h-64 p-5 mb-6 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none focus:border-[#B5815A]"></textarea>
                     <button onclick="submitEtext()" class="w-full bg-[#B5815A] py-5 rounded-2xl text-white font-bold uppercase font-sans shadow-lg hover:shadow-xl transition-all">Upload to Database</button>
                 </div>
@@ -188,10 +187,9 @@
 
         async function submitEtext() {
             const title = document.getElementById('upTitle').value;
-            const subject = document.getElementById('upSubject').value;
             const content = document.getElementById('upContent').value;
-            const { error } = await kClient.from('manuscripts').insert([{ title_iast: title, subject: subject, content: content, search_blob: `${title} ${subject}` }]);
-            if (!error) { alert("Successfully Uploaded."); switchView('catalog'); fetchData(); }
+            await kClient.from('manuscripts').insert([{ title_iast: title, content: content, search_blob: title }]);
+            location.reload();
         }
 
         async function handleSignIn() {
