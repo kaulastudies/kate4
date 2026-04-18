@@ -16,7 +16,7 @@
             --accent: #B5815A; 
             --dark-brown: #3E170F;
             --warm-white: #FDFBF9; 
-            --soft-beige: #F5F2EF;
+            --soft-beige: #F5F2EF; /* The tan/beige for the reading pane */
         }
         
         body { font-family: 'Gentium Plus', serif; background-color: var(--dark-brown); color: var(--warm-white); transition: all 0.3s ease; }
@@ -36,7 +36,10 @@
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #B5815A; border-radius: 10px; }
-        #previewPane { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Transition for opening the float */
+        #previewPane { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; transform: translateX(120%); }
+        #previewPane.open { transform: translateX(0); opacity: 1; }
     </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col bg-[#3E170F]">
@@ -54,7 +57,7 @@
     </div>
 
     <div id="dashboard" class="hidden flex h-full">
-        <aside class="w-72 bg-[#3E170F] border-r border-[#FDFBF9]/10 shrink-0 font-sans">
+        <aside class="w-72 bg-[#3E170F] border-r border-[#FDFBF9]/10 shrink-0 font-sans flex flex-col">
             <div class="p-8 border-b border-[#FDFBF9]/10 h-32 flex flex-col justify-center">
                 <h2 class="heading-font text-[#FDFBF9] text-3xl leading-tight">Manuscript<br>Database</h2>
                 <p class="font-sans text-[10px] text-[#B5815A] uppercase tracking-[0.2em] font-bold mt-1">Centre for Kaula Studies</p>
@@ -72,7 +75,7 @@
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col overflow-hidden">
+        <main class="flex-1 flex flex-col overflow-hidden relative">
             <section id="v-catalog" class="flex-1 flex flex-col p-12 overflow-hidden">
                 <div class="max-w-4xl mx-auto w-full">
                     <h2 class="heading-font text-5xl text-[#FDFBF9] mb-8 font-semibold">Manuscript Database</h2>
@@ -91,11 +94,11 @@
                     <button onclick="submitEtext()" class="w-full bg-[#B5815A] py-5 rounded-2xl text-white font-bold uppercase font-sans">Upload to Database</button>
                 </div>
             </section>
-        </main>
 
-        <aside id="previewPane" class="w-0 bg-[#F5F2EF] border-l border-[#3E170F] flex flex-col overflow-hidden shadow-2xl z-20">
-            <div id="previewContent" class="p-12 invisible opacity-0 transition-opacity flex flex-col h-full"></div>
-        </aside>
+            <aside id="previewPane" class="absolute top-6 bottom-6 right-6 w-[750px] bg-[#F5F2EF] rounded-[40px] flex flex-col overflow-hidden shadow-2xl z-50 opacity-0 border border-[#3E170F]/10">
+                <div id="previewContent" class="p-12 flex flex-col h-full"></div>
+            </aside>
+        </main>
     </div>
 
     <script>
@@ -126,7 +129,7 @@
             if (data) {
                 document.getElementById('catalogList').innerHTML = data.map(m => `
                     <div onclick="openPreview(${JSON.stringify(m).replace(/"/g, '&quot;')}, this)" 
-                         class="surface-box p-8 rounded-3xl flex justify-between items-center clickable border border-transparent hover:border-[#B5815A]/30 shadow-sm hover:shadow-xl transition-all">
+                         class="surface-box p-8 rounded-3xl flex justify-between items-center clickable border border-transparent hover:border-[#B5815A]/30 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
                         <div>
                             <h4 class="iast-font text-2xl text-[#3E170F] mb-1">${m.title_iast}</h4>
                             <p class="font-sans text-[10px] text-[#714C33] font-bold uppercase tracking-[0.2em]">${m.subject || 'E-Text'}</p>
@@ -138,21 +141,26 @@
 
         function openPreview(m, el) {
             originalContent = m.content || '';
-            const pane = document.getElementById('previewPane');
-            const content = document.getElementById('previewContent');
-            pane.style.width = "750px";
-            content.classList.remove('invisible', 'opacity-0');
             
+            // Visual Toggle for Active Row
+            document.querySelectorAll('#catalogList > div').forEach(d => d.style.borderColor = 'transparent');
+            el.style.borderColor = '#B5815A';
+            
+            // Open the Floating Pane
+            const pane = document.getElementById('previewPane');
+            pane.classList.add('open');
+            
+            const content = document.getElementById('previewContent');
             content.innerHTML = `
-                <div class="flex justify-between items-center mb-8 pb-4 border-b border-[#3E170F]/20 font-sans">
+                <div class="flex justify-between items-center mb-8 pb-4 border-b border-[#3E170F]/20 font-sans shrink-0">
                     <button onclick="closePane()" class="text-[10px] font-black uppercase text-[#B5815A] tracking-widest">✕ Close View</button>
                     <div class="flex space-x-2">
                         <button id="btnIAST" onclick="changeView('iast')" class="tab-btn tab-active">IAST</button>
                         <button id="btnDeva" onclick="changeView('devanagari')" class="tab-btn tab-inactive">Devanagari</button>
                     </div>
                 </div>
-                <h2 class="iast-font text-4xl text-[#3E170F] mb-8 leading-tight">${m.title_iast}</h2>
-                <textarea id="liveEditor" readonly class="flex-1 w-full p-8 rounded-[30px] text-xl leading-[2.2] bg-white border border-[#E1D2C1] outline-none text-[#3E170F] iast-font">${originalContent}</textarea>
+                <h2 class="iast-font text-4xl text-[#3E170F] mb-8 leading-tight shrink-0">${m.title_iast}</h2>
+                <textarea id="liveEditor" readonly class="flex-1 w-full p-8 rounded-[30px] text-xl leading-[2.2] bg-white border border-[#E1D2C1] outline-none text-[#3E170F] iast-font resize-none scrollbar-thin scrollbar-thumb-accent scrollbar-track-transparent">${originalContent}</textarea>
             `;
         }
 
@@ -161,7 +169,6 @@
             const btnIAST = document.getElementById('btnIAST');
             const btnDeva = document.getElementById('btnDeva');
             
-            // Visual Toggle logic
             if (fmt === 'iast') {
                 btnIAST.className = "tab-btn tab-active";
                 btnDeva.className = "tab-btn tab-inactive";
@@ -197,8 +204,8 @@
             if (!error) location.reload(); else alert(error.message);
         }
 
-        function closePane() { document.getElementById('previewPane').style.width = "0px"; }
-        function switchView(v) { document.getElementById('v-catalog').classList.toggle('hidden', v !== 'catalog'); document.getElementById('v-upload').classList.toggle('hidden', v !== 'upload'); }
+        function closePane() { document.getElementById('previewPane').classList.remove('open'); }
+        function switchView(v) { document.getElementById('v-catalog').classList.toggle('hidden', v !== 'catalog'); document.getElementById('v-upload').classList.toggle('hidden', v !== 'upload'); closePane(); }
         async function handleLogout() { await kClient.auth.signOut(); location.reload(); }
         window.onload = init;
     </script>
