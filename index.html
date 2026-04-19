@@ -31,10 +31,10 @@
         .tab-active { background-color: var(--dark-brown); color: white !important; border-color: var(--dark-brown); }
         .tab-inactive { background-color: transparent; color: var(--dark-brown) !important; border-color: rgba(62, 23, 15, 0.2); }
 
-        /* Transition for the Merged Sidebar */
+        /* Merged Sidebar Transition */
         #previewPane { 
             transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+            box-shadow: -20px 0 50px rgba(0,0,0,0.3);
         }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -43,63 +43,64 @@
 </head>
 <body class="h-screen flex overflow-hidden bg-[#3E170F]">
 
-    <aside class="w-72 bg-[#3E170F] border-r border-[#FDFBF9]/10 shrink-0 font-sans flex flex-col z-20">
-        <div class="p-8 border-b border-[#FDFBF9]/10 h-32 flex flex-col justify-center">
-            <h2 class="heading-font text-[#FDFBF9] text-3xl leading-tight">Manuscript<br>Database</h2>
-            <p class="font-sans text-[10px] text-[#B5815A] uppercase tracking-[0.2em] font-bold mt-1">Centre for Kaula Studies</p>
+    <aside class="w-72 bg-[#3E170F] border-r border-[#FDFBF9]/5 shrink-0 font-sans flex flex-col z-20">
+        <div class="p-10 h-40 flex flex-col justify-end">
+            <h2 class="heading-font text-[#B5815A] text-xl uppercase tracking-[0.25em] leading-relaxed font-bold">
+                Centre For<br>Kaula Studies
+            </h2>
         </div>
-        <div class="p-6">
-            <nav class="space-y-2">
-                <p class="px-5 text-[9px] uppercase tracking-[0.2em] font-bold text-[#B5815A] mb-4">Library</p>
-                <button onclick="switchView('catalog')" class="sidebar-btn">📖 Catalog</button>
-                <button id="navUpload" onclick="switchView('upload')" class="hidden sidebar-btn">📤 Upload E-Texts</button>
+        
+        <div class="p-6 flex-1">
+            <nav class="space-y-4">
+                <button onclick="switchView('catalog')" class="sidebar-btn text-lg">📖</button>
+                <button id="navUpload" onclick="switchView('upload')" class="hidden sidebar-btn text-lg">📤</button>
             </nav>
         </div>
-        <div class="p-8 mt-auto border-t border-[#FDFBF9]/10">
-            <p class="text-sm text-white font-bold mb-1" id="uiName">--</p>
-            <button onclick="handleLogout()" class="text-[10px] font-black text-[#B5815A] hover:text-white uppercase clickable">Logout</button>
+
+        <div class="p-10 border-t border-[#FDFBF9]/5 mt-auto">
+            <p class="text-[10px] uppercase tracking-widest text-[#B5815A] font-bold mb-2" id="uiName">Visitor</p>
+            <button onclick="handleLogout()" class="text-[9px] font-black text-[#FDFBF9]/40 hover:text-white uppercase clickable transition-colors">Logout</button>
         </div>
     </aside>
 
     <main class="flex-1 flex flex-col overflow-hidden relative bg-[#3E170F] z-10">
         <section id="v-catalog" class="flex-1 flex flex-col p-12 overflow-hidden">
             <div class="max-w-3xl mx-auto w-full">
-                <h2 class="heading-font text-5xl text-[#FDFBF9] mb-8 font-semibold">Manuscript Database</h2>
-                <input type="text" id="mSearch" oninput="fetchData()" placeholder="Central Search..." 
-                    class="w-full p-6 rounded-full shadow-2xl outline-none bg-[#FDFBF9] text-[#3E170F] font-sans mb-10 border-none focus:ring-4 focus:ring-[#B5815A]/30">
-                <div id="catalogList" class="overflow-y-auto space-y-4 pb-20 pr-2"></div>
+                <h2 class="heading-font text-5xl text-[#FDFBF9] mb-10 font-semibold">Manuscript Database</h2>
+                
+                <input type="text" id="mSearch" oninput="fetchData()" placeholder="Search by Volume, Chapter, or Title..." 
+                    class="w-full p-6 rounded-full shadow-2xl border-none outline-none bg-[#FDFBF9] text-[#3E170F] font-sans mb-12 focus:ring-4 focus:ring-[#B5815A]/30 transition-all">
+                
+                <div id="catalogList" class="overflow-y-auto space-y-5 pb-20 pr-2"></div>
             </div>
         </section>
 
         <section id="v-upload" class="hidden flex-1 p-16 overflow-y-auto">
             <div class="max-w-3xl mx-auto bg-[#FDFBF9] p-14 rounded-[40px] shadow-2xl">
                 <h2 class="heading-font text-4xl mb-8 text-[#3E170F] font-semibold">Upload E-Text</h2>
-                <input type="text" id="upTitle" placeholder="Title (IAST)" class="w-full p-5 mb-4 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none">
-                <textarea id="upContent" placeholder="Paste text here..." class="w-full h-64 p-5 mb-6 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none"></textarea>
-                <button onclick="submitEtext()" class="w-full bg-[#B5815A] py-5 rounded-2xl text-white font-bold uppercase font-sans">Upload</button>
+                <input type="text" id="upTitle" placeholder="Title (IAST)" class="w-full p-5 mb-4 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none focus:border-[#B5815A]">
+                <textarea id="upContent" placeholder="Paste text content here..." class="w-full h-64 p-5 mb-6 border border-[#E1D2C1] rounded-2xl text-[#3E170F] font-sans outline-none focus:border-[#B5815A]"></textarea>
+                <button onclick="submitEtext()" class="w-full bg-[#B5815A] py-5 rounded-2xl text-white font-bold uppercase font-sans tracking-widest shadow-lg hover:bg-[#714C33] transition-all">Upload to Database</button>
             </div>
         </section>
     </main>
 
-    <aside id="previewPane" class="w-0 bg-[#F5F2EF] flex flex-col overflow-hidden z-30">
-        <div id="previewContent" class="p-12 flex flex-col h-full opacity-0 transition-opacity duration-300">
-            </div>
+    <aside id="previewPane" class="w-0 bg-[#F5F2EF] flex flex-col overflow-hidden z-30 border-l border-[#3E170F]/10">
+        <div id="previewContent" class="p-14 flex flex-col h-full opacity-0 transition-opacity duration-300"></div>
     </aside>
 
     <script>
         const SB_URL = "https://gcgxcnbimqpfrowesfms.supabase.co";
         const SB_KEY = "sb_publishable_XObSGljjo-VILprIHw_Bxw_FKM7uUOU";
         const kClient = supabase.createClient(SB_URL, SB_KEY);
-        let userRole = 'public';
         let originalContent = '';
 
         async function init() {
             const { data: { session } } = await kClient.auth.getSession();
             if (session) {
                 const { data: profile } = await kClient.from('profiles').select('*').eq('id', session.user.id).single();
-                userRole = profile?.role || 'public';
                 document.getElementById('uiName').innerText = profile?.full_name || "Scholar";
-                if (['admin', 'scholar'].includes(userRole)) document.getElementById('navUpload').classList.remove('hidden');
+                if (['admin', 'scholar'].includes(profile?.role)) document.getElementById('navUpload').classList.remove('hidden');
                 fetchData();
             }
         }
@@ -112,7 +113,7 @@
             if (data) {
                 document.getElementById('catalogList').innerHTML = data.map(m => `
                     <div onclick="openPreview(${JSON.stringify(m).replace(/"/g, '&quot;')}, this)" 
-                         class="bg-[#FDFBF9] p-8 rounded-3xl flex justify-between items-center clickable border-2 border-transparent hover:border-[#B5815A]/30 text-[#3E170F] transition-all">
+                         class="bg-[#FDFBF9] p-8 rounded-[35px] flex justify-between items-center clickable border-2 border-transparent hover:border-[#B5815A]/40 text-[#3E170F] transition-all shadow-md hover:shadow-xl">
                         <div>
                             <h4 class="iast-font text-2xl mb-1">${m.title_iast}</h4>
                             <p class="font-sans text-[10px] text-[#714C33] font-bold uppercase tracking-[0.2em]">${m.subject || 'E-Text'}</p>
@@ -124,35 +125,28 @@
 
         function openPreview(m, el) {
             originalContent = m.content || '';
-            
-            // Highlight the selected card
             document.querySelectorAll('#catalogList > div').forEach(d => d.style.borderColor = 'transparent');
             el.style.borderColor = '#B5815A';
             
             const pane = document.getElementById('previewPane');
             const content = document.getElementById('previewContent');
             
-            // Merged Docking logic: expand width
-            pane.style.width = "50vw"; // Takes up half the screen
+            pane.style.width = "50vw";
             content.style.opacity = "1";
 
             content.innerHTML = `
-                <div class="flex justify-between items-center mb-8 pb-4 border-b border-[#3E170F]/10 font-sans shrink-0">
-                    <button onclick="closePane()" class="text-[10px] font-black uppercase text-[#B5815A] tracking-widest hover:text-[#3E170F]">✕ Close View</button>
+                <div class="flex justify-between items-center mb-10 pb-6 border-b border-[#3E170F]/5 font-sans shrink-0">
+                    <button onclick="closePane()" class="text-[10px] font-black uppercase text-[#B5815A] tracking-[0.2em] hover:text-[#3E170F] transition-colors">✕ Close View</button>
                     
-                    <div class="flex space-x-2 bg-[#3E170F]/5 p-1 rounded-full">
+                    <div class="flex space-x-2 bg-[#3E170F]/5 p-1.5 rounded-full">
                         <button id="btnIAST" onclick="changeView('iast')" class="tab-btn tab-active">IAST</button>
                         <button id="btnDeva" onclick="changeView('devanagari')" class="tab-btn tab-inactive">Devanagari</button>
                     </div>
                 </div>
                 
-                <h2 class="iast-font text-4xl text-[#3E170F] mb-8 leading-tight shrink-0">${m.title_iast}</h2>
+                <h2 class="iast-font text-4xl text-[#3E170F] mb-10 leading-tight shrink-0 font-medium">${m.title_iast}</h2>
                 
-                <textarea id="liveEditor" readonly class="flex-1 w-full p-10 rounded-[30px] text-xl leading-[2.2] bg-white border border-[#E1D2C1] outline-none text-[#3E170F] iast-font resize-none shadow-inner">${originalContent}</textarea>
-                
-                <button onclick="downloadAsTXT('${m.title_iast}')" class="mt-6 w-full py-4 border-2 border-[#B5815A] text-[#B5815A] rounded-full font-bold uppercase text-[10px] tracking-widest hover:bg-[#B5815A] hover:text-white transition-all">
-                    Download .txt
-                </button>
+                <textarea id="liveEditor" readonly class="flex-1 w-full p-12 rounded-[40px] text-xl leading-[2.3] bg-white border border-[#E1D2C1]/30 outline-none text-[#3E170F] iast-font resize-none shadow-inner">${originalContent}</textarea>
             `;
         }
 
@@ -168,7 +162,6 @@
             } else {
                 btnIAST.className = "tab-btn tab-inactive";
                 btnDeva.className = "tab-btn tab-active";
-                
                 const marker = "Text:";
                 const idx = originalContent.indexOf(marker);
                 if (idx !== -1) {
@@ -179,16 +172,6 @@
                     editor.value = Sanscript.t(originalContent, 'iast', 'devanagari');
                 }
             }
-        }
-
-        function downloadAsTXT(title) {
-            const text = document.getElementById('liveEditor').value;
-            const blob = new Blob([text], { type: 'text/plain' });
-            const anchor = document.createElement('a');
-            anchor.download = title + ".txt";
-            anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
-            anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
-            anchor.click();
         }
 
         function closePane() { 
