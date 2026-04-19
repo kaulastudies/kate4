@@ -58,14 +58,13 @@
     <div id="dashboard" class="hidden flex h-full w-full">
         
         <aside class="w-72 bg-[#3E170F] border-r border-[#FDFBF9]/10 shrink-0 font-sans flex flex-col z-20">
-            <div class="p-8 border-b border-[#FDFBF9]/10 h-40 flex flex-col justify-center">
+            <div class="p-8 border-b border-[#FDFBF9]/10 h-40 flex flex-col justify-center clickable hover:bg-white/5 transition-colors" onclick="switchView('catalog')">
                 <h2 class="heading-font text-[#B5815A] text-lg uppercase tracking-[0.25em] leading-relaxed font-bold">
                     Centre For<br>Kaula Studies
                 </h2>
             </div>
             <div class="p-6 flex-1">
                 <nav class="space-y-2">
-                    <button onclick="switchView('catalog')" class="sidebar-btn">📖 Catalog</button>
                     <button id="navUpload" onclick="switchView('upload')" class="hidden sidebar-btn">📤 Upload</button>
                     <button id="navAdmin" onclick="switchView('admin')" class="hidden sidebar-btn text-[#B5815A] font-bold">🛡️ Governance</button>
                 </nav>
@@ -124,7 +123,7 @@
         const kClient = supabase.createClient(SB_URL, SB_KEY);
         
         let originalContent = '';
-        let userRole = 'public'; // RESTORED
+        let userRole = 'public';
 
         async function init() {
             try {
@@ -138,7 +137,6 @@
                         userRole = profile.role || 'public';
                         document.getElementById('uiName').innerText = profile.full_name || "Scholar";
                         
-                        // RESTORED: Admin Unhiding Logic
                         if (['admin', 'scholar'].includes(userRole)) {
                             document.getElementById('navUpload').classList.remove('hidden');
                         }
@@ -192,7 +190,6 @@
             pane.style.width = "50vw";
             content.style.opacity = "1";
 
-            // RESTORED: Check if user is admin/scholar to allow editing
             const canEdit = ['admin', 'scholar', 'typist'].includes(userRole);
 
             content.innerHTML = `
@@ -219,7 +216,6 @@
             `;
         }
 
-        // RESTORED: Save Changes Function
         async function saveChanges(id) {
             const val = document.getElementById('liveEditor').value;
             const { error } = await kClient.from('manuscripts').update({ content: val, last_revision_date: new Date().toISOString() }).eq('id', id);
@@ -272,7 +268,6 @@
             document.querySelectorAll('#catalogList > div').forEach(d => d.style.borderColor = 'transparent');
         }
 
-        // RESTORED: Admin Switch Views
         function switchView(v) { 
             ['catalog', 'admin', 'upload'].forEach(s => { 
                 const el = document.getElementById('v-'+s); 
@@ -297,7 +292,6 @@
             }
         }
 
-        // RESTORED: Governance Functions
         async function loadGovernanceData() {
             const { data } = await kClient.from('profiles').select('*');
             if(data) {
